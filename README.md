@@ -4,7 +4,7 @@ Projeto simples em C++ para gerenciar livros, usuários e empréstimos, desenvol
 
 Como compilar e executar:
 Compilar (no terminal, dentro da pasta do projeto):
-    make
+    g++ -o biblioteca *.cpp -lsqlite3
 
 Executar:
     ./biblioteca
