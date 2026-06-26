@@ -1,12 +1,14 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <sqlite3.h>     
 #include "Usuario.h"
 #include "Bibliotecario.h"
 #include "Livro.h"
 #include "Emprestimo.h"
 
 using namespace std;
+
 
 Usuario* buscarUsuario(vector<Usuario*>& usuarios, int mat) {
     for (size_t i = 0; i < usuarios.size(); i++) {
@@ -25,11 +27,43 @@ Livro* buscarLivro(vector<Livro*>& acervo, string isbn) {
 }
 
 int main() {
+
+    sqlite3* db;
+    int rc = sqlite3_open("biblioteca.db", &db);
+    if (rc) {
+        cout << "Erro ao abrir banco: " << sqlite3_errmsg(db) << endl;
+        return 1;
+    }
+    cout << "Banco de dados conectado!\n";
+
+    const char* sqlCreate = "CREATE TABLE IF NOT EXISTS livros ("
+                            "isbn TEXT PRIMARY KEY, "
+                            "titulo TEXT NOT NULL, "
+                            "autor TEXT NOT NULL, "
+                            "disponivel INTEGER NOT NULL DEFAULT 1);";
+    char* errMsg = 0;
+    sqlite3_exec(db, sqlCreate, 0, 0, &errMsg);
+
     vector<Livro*> acervo;
     vector<Usuario*> usuarios;
     vector<Emprestimo*> emprestimos;
 
     Bibliotecario* bib = new Bibliotecario("Carlos", "123.456.789-00", 1001);
+
+
+    string sqlSelect = "SELECT isbn, titulo, autor, disponivel FROM livros;";
+    sqlite3_stmt* stmt;
+    sqlite3_prepare_v2(db, sqlSelect.c_str(), -1, &stmt, 0);
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        string isbn = (char*)sqlite3_column_text(stmt, 0);
+        string titulo = (char*)sqlite3_column_text(stmt, 1);
+        string autor = (char*)sqlite3_column_text(stmt, 2);
+        int disp = sqlite3_column_int(stmt, 3);
+        Livro* l = new Livro(isbn, titulo, autor);
+        l->setDisponivel(disp == 1);
+        acervo.push_back(l);
+    }
+    sqlite3_finalize(stmt);
 
     int op;
     do {
@@ -41,20 +75,37 @@ int main() {
         cout << "5. Consultar acervo\n";
         cout << "6. Ver empréstimos de um usuário\n";
         cout << "7. Sair\n";
+        cout << "8. Quantos livros de um autor?\n";        
+        cout << "9. Quantos livros disponíveis?\n";        
         cout << "Opção: ";
         cin >> op;
         cin.ignore();
 
         switch (op) {
+           
             case 1: {
                 string isbn, titulo, autor;
                 cout << "ISBN: "; getline(cin, isbn);
                 cout << "Título: "; getline(cin, titulo);
                 cout << "Autor: "; getline(cin, autor);
-                Livro* l = new Livro(isbn, titulo, autor);
-                bib->cadastrarLivro(acervo, l);
+                
+                
+                string sqlInsert = "INSERT INTO livros (isbn, titulo, autor, disponivel) VALUES ('" 
+                                   + isbn + "', '" + titulo + "', '" + autor + "', 1);";
+                rc = sqlite3_exec(db, sqlInsert.c_str(), 0, 0, &errMsg);
+                if (rc != SQLITE_OK) {
+                    cout << "Erro: " << errMsg << " (ISBN pode estar duplicado)\n";
+                    sqlite3_free(errMsg);
+                } else {
+                    
+                    Livro* l = new Livro(isbn, titulo, autor);
+                    acervo.push_back(l);
+                    cout << "Livro cadastrado com sucesso!\n";
+                }
                 break;
             }
+
+    
             case 2: {
                 string nome, cpf;
                 int mat;
@@ -65,6 +116,8 @@ int main() {
                 cout << "Usuário cadastrado.\n";
                 break;
             }
+
+
             case 3: {
                 int mat;
                 string isbn, dataEmp, dataPrev;
@@ -80,30 +133,75 @@ int main() {
                     cout << "Livro não encontrado.\n";
                     break;
                 }
+                if (!l->isDisponivel()) {
+                    cout << "Livro indisponível.\n";
+                    break;
+                }
                 cout << "Data empréstimo (dd/mm): "; getline(cin, dataEmp);
                 cout << "Data devolução prevista (dd/mm): "; getline(cin, dataPrev);
-                bib->realizarEmprestimo(emprestimos, u, l, dataEmp, dataPrev);
+                
+
+                string sqlEmp = "UPDATE livros SET disponivel = 0 WHERE isbn = '" + isbn + "';";
+                sqlite3_exec(db, sqlEmp.c_str(), 0, 0, &errMsg);
+                
+
+                l->setDisponivel(false);
+                Emprestimo* emp = new Emprestimo(dataEmp, dataPrev, u, l);
+                emprestimos.push_back(emp);
+                u->adicionarEmprestimo(emp);
+                cout << "Empréstimo realizado.\n";
                 break;
             }
+
+
             case 4: {
                 string isbn;
                 cout << "ISBN do livro: "; getline(cin, isbn);
                 Livro* l = buscarLivro(acervo, isbn);
-                if (l) {
-                    l->devolver();
-                } else {
+                if (!l) {
                     cout << "Livro não encontrado.\n";
+                    break;
                 }
+                if (l->isDisponivel()) {
+                    cout << "Livro já está disponível.\n";
+                    break;
+                }
+                
+
+                string sqlDev = "UPDATE livros SET disponivel = 1 WHERE isbn = '" + isbn + "';";
+                sqlite3_exec(db, sqlDev.c_str(), 0, 0, &errMsg);
+                
+
+                l->setDisponivel(true);
+                cout << "Livro devolvido.\n";
                 break;
             }
+
+        
             case 5: {
-                if (usuarios.empty()) {
-                    cout << "Nenhum usuário cadastrado para consultar.\n";
-                } else {
-                    usuarios[0]->consultarLivros(acervo);
+                cout << "\n--- ACERVO ---\n";
+                
+                string sqlBusca = "SELECT isbn, titulo, autor, disponivel FROM livros;";
+                sqlite3_stmt* stmt2;
+                sqlite3_prepare_v2(db, sqlBusca.c_str(), -1, &stmt2, 0);
+                bool temLivro = false;
+                while (sqlite3_step(stmt2) == SQLITE_ROW) {
+                    temLivro = true;
+                    string isbn = (char*)sqlite3_column_text(stmt2, 0);
+                    string titulo = (char*)sqlite3_column_text(stmt2, 1);
+                    string autor = (char*)sqlite3_column_text(stmt2, 2);
+                    int disp = sqlite3_column_int(stmt2, 3);
+                    cout << "Título: " << titulo 
+                         << ", Autor: " << autor 
+                         << ", ISBN: " << isbn 
+                         << ", Disponível: " << (disp ? "Sim" : "Não") << "\n";
                 }
+                sqlite3_finalize(stmt2);
+                if (!temLivro) cout << "Nenhum livro cadastrado.\n";
                 break;
             }
+
+            
             case 6: {
                 int mat;
                 cout << "Matrícula: "; cin >> mat; cin.ignore();
@@ -124,19 +222,57 @@ int main() {
                 if (!tem) cout << "Nenhum empréstimo ativo.\n";
                 break;
             }
+
+            
             case 7:
                 cout << "Saindo...\n";
                 break;
+
+            
+            case 8: {
+                string autor;
+                cout << "Digite o nome do autor: ";
+                getline(cin, autor);
+                string sql = "SELECT COUNT(*) FROM livros WHERE autor = '" + autor + "';";
+                sqlite3_stmt* stmt3;
+                sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt3, 0);
+                int total = 0;
+                if (sqlite3_step(stmt3) == SQLITE_ROW) {
+                    total = sqlite3_column_int(stmt3, 0);
+                }
+                sqlite3_finalize(stmt3);
+                cout << "Existem " << total << " livros do autor " << autor << " no acervo.\n";
+                break;
+            }
+
+            
+            case 9: {
+                string sql = "SELECT COUNT(*) FROM livros WHERE disponivel = 1;";
+                sqlite3_stmt* stmt4;
+                sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt4, 0);
+                int total = 0;
+                if (sqlite3_step(stmt4) == SQLITE_ROW) {
+                    total = sqlite3_column_int(stmt4, 0);
+                }
+                sqlite3_finalize(stmt4);
+                cout << "Total de livros disponíveis: " << total << "\n";
+                break;
+            }
+
             default:
                 cout << "Opção inválida.\n";
         }
     } while (op != 7);
 
-    // Libera memória
+    
     for (size_t i = 0; i < emprestimos.size(); i++) delete emprestimos[i];
     for (size_t i = 0; i < acervo.size(); i++) delete acervo[i];
     for (size_t i = 0; i < usuarios.size(); i++) delete usuarios[i];
     delete bib;
+
+
+    sqlite3_close(db);
+    cout << "Banco fechado.\n";
 
     return 0;
 }
