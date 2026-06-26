@@ -9,7 +9,6 @@
 
 using namespace std;
 
-
 Usuario* buscarUsuario(vector<Usuario*>& usuarios, int mat) {
     for (size_t i = 0; i < usuarios.size(); i++) {
         if (usuarios[i]->getMatricula() == mat)
@@ -90,7 +89,6 @@ int main() {
                 cout << "Autor: "; getline(cin, autor);
                 
                 
-                string sqlInsert = "INSERT INTO livros (isbn, titulo, autor, disponivel) VALUES ('" 
                                    + isbn + "', '" + titulo + "', '" + autor + "', 1);";
                 rc = sqlite3_exec(db, sqlInsert.c_str(), 0, 0, &errMsg);
                 if (rc != SQLITE_OK) {
@@ -106,9 +104,9 @@ int main() {
             }
 
     
-            case 2: {
-                string nome, cpf;
-                int mat;
+
+                Livro* l = new Livro(isbn, titulo, autor);
+                bib->cadastrarLivro(acervo, l);
                 cout << "Nome: "; getline(cin, nome);
                 cout << "CPF: "; getline(cin, cpf);
                 cout << "Matrícula: "; cin >> mat; cin.ignore();
