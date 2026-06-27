@@ -2,7 +2,7 @@
 
 Projeto simples em C++ para gerenciar livros, usuários e empréstimos, desenvolvido para a disciplina de Programação Orientada a Objetos.
 
-Como compilar e executar:
+## Como compilar e executar:
 Compilar (no terminal, dentro da pasta do projeto):
     g++ -o biblioteca *.cpp -lsqlite3
 
@@ -62,13 +62,14 @@ Composição (Usuario guarda seu histórico de empréstimos)
 - [ ] Edição e exclusão de Livro
 - [ ] CRUD completo de Empréstimo
 
-## Como executar
+## Como executar com  a adição do banco de dados no código:
 
 1. Instale a biblioteca SQLite3.
 2. Compile o projeto.
 3. Execute o programa.
 4. O banco de dados `biblioteca.db` será criado automaticamente caso não exista.
 4. Explicar a estrutura
+   
 ## Estrutura
 
 - Pessoa
