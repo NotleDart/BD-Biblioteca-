@@ -77,7 +77,7 @@ const char* sqlCreateUsuarios =
     const char* sqlCreateEmprestimos =
     "CREATE TABLE IF NOT EXISTS emprestimos ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-    j    "matricula INTEGER NOT NULL,"
+        "matricula INTEGER NOT NULL,"
         "isbn TEXT NOT NULL,"
         "dataEmprestimo TEXT NOT NULL,"
         "dataPrevista TEXT NOT NULL,"
