@@ -71,10 +71,8 @@ Composição (Usuario guarda seu histórico de empréstimos)
 sqlite-tools
 sqlite-dll
 sqlite-amalgamation
-- Se for no Linux: Instale o SQLite3 nativo: Abra o terminal e digite sudo apt install sqlite3 (em distros baseadas em Debian/Ubuntu);
-- .Instale o DB Browser: Digite sudo apt install sqlitebrowser;
-- sudo dnf install sqlite (Fedora) e depois sudo dnf install sqlite-devel;
-- sudo pacman -S sqlite (Arch);
+- Se for no Linux: Instale o SQLite3 nativo: Abra o terminal e digite sudo apt install sqlite3 (em distros baseadas em Debian/Ubuntu) e instale o DB Browser: Digite sudo apt install sqlitebrowser;
+- Outras distros: sudo dnf install sqlite (Fedora) e depois sudo dnf install sqlite-devel ou sudo pacman -S sqlite (Arch);
 - Se for no Mac o SQLite normalmente já vem instalado (verifique usando:sqlite3 --version).
    
 3. Compile o projeto.
