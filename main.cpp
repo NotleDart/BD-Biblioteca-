@@ -71,8 +71,14 @@ const char* sqlCreateUsuarios =
 "matricula INTEGER PRIMARY KEY,"
 "nome TEXT NOT NULL,"
 "cpf TEXT NOT NULL);";
+sqlite3_exec(db, sqlCreateUsuarios, 0, 0, &errMsg);
 
-
+    const char* sqlCreateBibliotecarios =
+"CREATE TABLE IF NOT EXISTS bibliotecarios ("
+"codigo INTEGER PRIMARY KEY,"
+"nome TEXT NOT NULL,"
+"cpf TEXT NOT NULL);";
+sqlite3_exec(db, sqlCreateBibliotecarios, 0, 0, &errMsg);
     
     const char* sqlCreateEmprestimos =
     "CREATE TABLE IF NOT EXISTS emprestimos ("
