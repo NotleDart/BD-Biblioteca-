@@ -62,9 +62,6 @@ Composição (Usuario guarda seu histórico de empréstimos)
 - [ ] Edição e exclusão de Livro
 - [ ] CRUD completo de Empréstimo
 
-Assim você é transparente sobre o que foi implementado.
-
-3. Explicar como executar
 ## Como executar
 
 1. Instale a biblioteca SQLite3.
@@ -80,20 +77,8 @@ Assim você é transparente sobre o que foi implementado.
 - Livro
 - Emprestimo
 - Biblioteca
-5. Adicionar observação sobre o banco
 
-Como o professor pediu um .db preenchido, coloque:
-
-## Banco de dados
-
-O projeto acompanha um arquivo `biblioteca.db` contendo registros de exemplo para facilitar a avaliação.
-O que eu não faria
-
-Eu não afirmaria que o projeto implementa CRUD completo se isso não for verdade. O professor provavelmente vai testar as funcionalidades e perceber a diferença.
-
-No seu caso, o README deve refletir exatamente o estado atual do projeto. Depois que vocês implementarem os CRUDs que faltam, aí sim basta atualizar a seção de requisitos marcando-os como concluídos.
-
-Observações
+## Observações
 Os dados são persistidos em um banco de dados SQLite3 (biblioteca.db). Além do armazenamento em memória com std::vector, as operações também utilizam o banco de dados para persistência das informações.
 
 Código simples, focado em aprendizado.
