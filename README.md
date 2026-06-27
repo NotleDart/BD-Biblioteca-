@@ -65,9 +65,21 @@ Composição (Usuario guarda seu histórico de empréstimos)
 ## Como executar com  a adição do banco de dados no código:
 
 1. Instale a biblioteca SQLite3.
-2. Compile o projeto.
-3. Execute o programa.
-4. O banco de dados `biblioteca.db` será criado automaticamente caso não exista.
+ - Se for no Windows:
+ Acesse https://www.sqlite.org/download.html
+  Baixe os pacotes:
+sqlite-tools
+sqlite-dll
+sqlite-amalgamation
+- Se for no Linux: Instale o SQLite3 nativo: Abra o terminal e digite sudo apt install sqlite3 (em distros baseadas em Debian/Ubuntu);
+- .Instale o DB Browser: Digite sudo apt install sqlitebrowser;
+- sudo dnf install sqlite (Fedora) e depois sudo dnf install sqlite-devel;
+- sudo pacman -S sqlite (Arch);
+- Se for no Mac o SQLite normalmente já vem instalado (verifique usando:sqlite3 --version).
+   
+3. Compile o projeto.
+4. Execute o programa.
+5. O banco de dados `biblioteca.db` será criado automaticamente caso não exista.
 4. Explicar a estrutura
    
 ## Estrutura
