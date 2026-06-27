@@ -65,11 +65,19 @@ int main() {
                             "disponivel INTEGER NOT NULL DEFAULT 1);";
     char* errMsg = 0;
     sqlite3_exec(db, sqlCreate, 0, 0, &errMsg);
+    
+const char* sqlCreateUsuarios =
+"CREATE TABLE IF NOT EXISTS usuarios ("
+"matricula INTEGER PRIMARY KEY,"
+"nome TEXT NOT NULL,"
+"cpf TEXT NOT NULL);";
 
+
+    
     const char* sqlCreateEmprestimos =
     "CREATE TABLE IF NOT EXISTS emprestimos ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-        "matricula INTEGER NOT NULL,"
+    j    "matricula INTEGER NOT NULL,"
         "isbn TEXT NOT NULL,"
         "dataEmprestimo TEXT NOT NULL,"
         "dataPrevista TEXT NOT NULL,"
