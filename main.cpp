@@ -6,6 +6,9 @@
 #include "Bibliotecario.h"
 #include "Livro.h"
 #include "Emprestimo.h"
+#include <ctime>
+#include <iomanip>
+#include <sstream>
 
 using namespace std;
 
@@ -25,6 +28,26 @@ Livro* buscarLivro(vector<Livro*>& acervo, string isbn) {
     return NULL;
 }
 
+string calcularDataPrevista(string dataEmp) {
+
+    tm data = {};
+
+    istringstream ss(dataEmp);
+
+    ss >> get_time(&data, "%Y-%m-%d");
+
+    time_t tempo = mktime(&data);
+
+    tempo += 7 * 24 * 60 * 60;
+
+    tm* novaData = localtime(&tempo);
+
+    ostringstream saida;
+    saida << put_time(novaData, "%Y-%m-%d");
+
+    return saida.str(); 
+}
+
 int main() {
 
     sqlite3* db;
@@ -42,6 +65,17 @@ int main() {
                             "disponivel INTEGER NOT NULL DEFAULT 1);";
     char* errMsg = 0;
     sqlite3_exec(db, sqlCreate, 0, 0, &errMsg);
+
+    const char* sqlCreateEmprestimos =
+    "CREATE TABLE IF NOT EXISTS emprestimos ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "matricula INTEGER NOT NULL,"
+        "isbn TEXT NOT NULL,"
+        "dataEmprestimo TEXT NOT NULL,"
+        "dataPrevista TEXT NOT NULL,"
+        "devolvido INTEGER DEFAULT 0"
+        ");";
+        sqlite3_exec(db, sqlCreateEmprestimos, 0, 0, &errMsg);
 
     vector<Livro*> acervo;
     vector<Usuario*> usuarios;
@@ -74,7 +108,8 @@ int main() {
         cout << "6. Ver empréstimos de um usuário\n";
         cout << "7. Sair\n";
         cout << "8. Quantos livros de um autor?\n";   
-        cout << "9. Quantos livros disponíveis?\n";        
+        cout << "9. Quantos livros disponíveis?\n";
+        cout << "10. Emprestimos atrasados\n";        
         cout << "Opção: ";
         cin >> op;
         cin.ignore();
@@ -135,8 +170,8 @@ int main() {
                     cout << "Livro indisponível.\n";
                     break;
                 }
-                cout << "Data empréstimo (dd/mm): "; getline(cin, dataEmp);
-                cout << "Data devolução prevista (dd/mm): "; getline(cin, dataPrev);
+                cout << "Data empréstimo (yyyy/mm/dd): "; getline(cin, dataEmp);
+                dataPrev = calcularDataPrevista(dataEmp);
                 
        
                 string sqlEmp = "UPDATE livros SET disponivel = 0 WHERE isbn = '" + isbn + "';";
@@ -144,6 +179,17 @@ int main() {
                 
         
                 l->setDisponivel(false);
+                string sqlInsertEmp =
+                "INSERT INTO emprestimos "
+                "(matricula, isbn, dataEmprestimo, dataPrevista, devolvido) VALUES ("
+                + to_string(mat) +
+                ", '" + isbn + 
+                "', '" + dataEmp +
+                "', '" + dataPrev +
+                "', 0);"; 
+                
+                sqlite3_exec(db, sqlInsertEmp.c_str(), 0, 0, &errMsg);
+
                 Emprestimo* emp = new Emprestimo(dataEmp, dataPrev, u, l);
                 emprestimos.push_back(emp);
                 u->adicionarEmprestimo(emp);
@@ -168,6 +214,13 @@ int main() {
     
                 string sqlDev = "UPDATE livros SET disponivel = 1 WHERE isbn = '" + isbn + "';";
                 sqlite3_exec(db, sqlDev.c_str(), 0, 0, &errMsg);
+
+                string sqlDevEmp =
+                "UPDATE emprestimos" 
+                "SET devolvido = 1"
+                "WHERE isbn = '" + isbn + "' AND devolvido = 0;";
+                sqlite3_exec(db, sqlDevEmp.c_str(), 0, 0, &errMsg);
+
                 
     
                 l->setDisponivel(true);
@@ -254,6 +307,56 @@ int main() {
                 cout << "Total de livros disponíveis: " << total << "\n";
                 break;
             }
+                
+
+            case 10: {
+
+    string sql =
+    "SELECT matricula, isbn, dataEmprestimo, dataPrevista "
+    "FROM emprestimos "
+    "WHERE devolvido = 0;";
+
+    sqlite3_stmt* stmt5;
+    sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt5, 0);
+
+    time_t agora = time(0);
+    tm* dataAtual = localtime(&agora);
+
+    char hoje[11];
+    strftime(hoje, sizeof(hoje), "%Y-%m-%d", dataAtual);
+    string dataHoje = hoje;
+
+    bool atrasado = false;
+
+    cout << "\n--- EMPRÉSTIMOS ATRASADOS ---\n";
+
+    while (sqlite3_step(stmt5) == SQLITE_ROW) {
+
+        string dataPrevista = (char*)sqlite3_column_text(stmt5, 3);
+
+        if (dataHoje > dataPrevista) {
+
+            atrasado = true;
+
+            cout << "Matrícula: "
+                 << sqlite3_column_int(stmt5, 0)
+                 << "\nISBN: "
+                 << (char*)sqlite3_column_text(stmt5, 1)
+                 << "\nData do empréstimo: "
+                 << (char*)sqlite3_column_text(stmt5, 2)
+                 << "\nData prevista: "
+                 << dataPrevista
+                 << "\n--------------------------\n";
+        }
+    }
+
+    if (!atrasado)
+        cout << "Nenhum empréstimo atrasado.\n";
+
+    sqlite3_finalize(stmt5);
+
+    break;
+}
 
             default:
                 cout << "Opção inválida.\n";
@@ -270,3 +373,4 @@ int main() {
 
     return 0;
 }
+            
