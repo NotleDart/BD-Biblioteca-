@@ -74,11 +74,10 @@ sqlite-amalgamation
 - Se for no Linux: Instale o SQLite3 nativo: Abra o terminal e digite sudo apt install sqlite3 (em distros baseadas em Debian/Ubuntu) e instale o DB Browser: Digite sudo apt install sqlitebrowser;
 - Outras distros: sudo dnf install sqlite (Fedora) e depois sudo dnf install sqlite-devel ou sudo pacman -S sqlite (Arch);
 - Se for no Mac o SQLite normalmente já vem instalado (verifique usando:sqlite3 --version).
-   
-3. Compile o projeto.
-4. Execute o programa.
-5. O banco de dados `biblioteca.db` será criado automaticamente caso não exista.
-4. Explicar a estrutura
+2. Compile o projeto.
+3. Execute o programa.
+4. O banco de dados `biblioteca.db` será criado automaticamente caso não exista.
+
    
 ## Estrutura
 
